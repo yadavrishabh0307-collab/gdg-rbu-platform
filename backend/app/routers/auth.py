@@ -29,11 +29,12 @@ def get_admin_user(current_user: User = Depends(get_current_user)) -> User:
 
 @router.post("/register", response_model=Token, status_code=201)
 def register(data: UserCreate, db: Session = Depends(get_db)):
-    if db.query(User).filter(User.email == data.email).first():
+    email = data.email.lower().strip()
+    if db.query(User).filter(User.email == email).first():
         raise HTTPException(status_code=400, detail="Email already registered")
     user = User(
-        name=data.name,
-        email=data.email,
+        name=data.name.strip(),
+        email=email,
         hashed_password=get_password_hash(data.password),
     )
     db.add(user)
@@ -45,7 +46,8 @@ def register(data: UserCreate, db: Session = Depends(get_db)):
 
 @router.post("/login", response_model=Token)
 def login(data: UserLogin, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.email == data.email).first()
+    email = data.email.lower().strip()
+    user = db.query(User).filter(User.email == email).first()
     if not user or not verify_password(data.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid email or password")
     token = create_access_token({"sub": user.email})

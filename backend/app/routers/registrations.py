@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session
+from sqlalchemy.sql import func
 from app.database import get_db
 from app.models.event import Event, Registration
 from app.models.user import User
@@ -25,9 +26,9 @@ async def register_for_event(
     existing = db.query(Registration).filter(
         Registration.user_id == current_user.id,
         Registration.event_id == event_id,
-        Registration.is_active == True,
     ).first()
-    if existing:
+
+    if existing and existing.is_active:
         raise HTTPException(status_code=400, detail="Already registered for this event")
 
     if event.is_full:
@@ -35,10 +36,18 @@ async def register_for_event(
 
     qr = generate_qr_code(current_user.id, event_id, current_user.name, event.title)
 
-    reg = Registration(user_id=current_user.id, event_id=event_id, qr_code=qr)
-    db.add(reg)
-    db.commit()
-    db.refresh(reg)
+    if existing and not existing.is_active:
+        existing.is_active = True
+        existing.qr_code = qr
+        existing.registered_at = func.now()
+        db.commit()
+        db.refresh(existing)
+        reg = existing
+    else:
+        reg = Registration(user_id=current_user.id, event_id=event_id, qr_code=qr)
+        db.add(reg)
+        db.commit()
+        db.refresh(reg)
 
     background_tasks.add_task(
         send_registration_confirmation,
