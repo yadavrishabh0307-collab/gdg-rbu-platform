@@ -18,8 +18,14 @@ export default function Home() {
 
   useEffect(() => {
     eventsAPI.list({ upcoming: true })
-      .then(r => setEvents(r.data))
-      .catch(() => {})
+      .then(r => {
+        if (Array.isArray(r.data)) {
+          setEvents(r.data)
+        } else {
+          setEvents([])
+        }
+      })
+      .catch(() => setEvents([]))
   }, [])
 
   // Live search debounced
@@ -34,7 +40,7 @@ export default function Home() {
     const timeoutId = setTimeout(() => {
       eventsAPI.list({ search: searchQuery.trim() })
         .then(res => {
-          setSearchResults(res.data)
+          setSearchResults(Array.isArray(res.data) ? res.data : [])
           setIsSearching(false)
         })
         .catch(() => {
@@ -90,21 +96,25 @@ export default function Home() {
     }
   ]
 
-  const firstEvent = events[0] || {
-    id: 1,
-    title: "GDG ORIENTATION",
-    description: "Welcome to Google Developer Groups RBU! Discover upcoming workshops, hackathons, open source cohorts, and how to get selected for core team roles.",
-    date_time: "2026-10-15T10:00:00",
-    venue: "Main Auditorium, RBU Campus"
-  }
+  const firstEvent = (Array.isArray(events) && events[0] && typeof events[0] === 'object' && events[0].title)
+    ? events[0]
+    : {
+        id: 1,
+        title: "GDG ORIENTATION",
+        description: "Welcome to Google Developer Groups RBU! Discover upcoming workshops, hackathons, open source cohorts, and how to get selected for core team roles.",
+        date_time: "2026-10-15T10:00:00",
+        venue: "Main Auditorium, RBU Campus"
+      }
 
-  const secondEvent = events[1] || {
-    id: 2,
-    title: "Cloud Study Jam & GenAI Workshop",
-    description: "Hands-on cloud architecture and Gemini API integration session with certificates and swag.",
-    date_time: "2026-10-22T14:00:00",
-    venue: "Computer Center Lab 3"
-  }
+  const secondEvent = (Array.isArray(events) && events[1] && typeof events[1] === 'object' && events[1].title)
+    ? events[1]
+    : {
+        id: 2,
+        title: "Cloud Study Jam & GenAI Workshop",
+        description: "Hands-on cloud architecture and Gemini API integration session with certificates and swag.",
+        date_time: "2026-10-22T14:00:00",
+        venue: "Computer Center Lab 3"
+      }
 
   return (
     <div className="figma-container">
@@ -252,7 +262,7 @@ export default function Home() {
           {/* Left Card: GDG Orientation (Rounded black-bordered container with gray preview inner) */}
           <div className="figma-event-card card-orientation">
             <div className="card-orientation-top">
-              <h3 className="card-pixel-header">{firstEvent.title.toUpperCase()}</h3>
+              <h3 className="card-pixel-header">{(firstEvent?.title || 'GDG ORIENTATION').toUpperCase()}</h3>
             </div>
             <div className="card-orientation-inner">
               <p className="card-orientation-desc">
@@ -286,7 +296,7 @@ export default function Home() {
               <div className="yellow-card-badge">New Event</div>
             </div>
             <div className="yellow-card-body">
-              <h3 className="yellow-event-title">{secondEvent.title}</h3>
+              <h3 className="yellow-event-title">{secondEvent?.title || 'Cloud Study Jam & GenAI Workshop'}</h3>
               <p className="yellow-event-desc">
                 {secondEvent.description}
               </p>

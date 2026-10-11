@@ -24,7 +24,7 @@ export default function Events() {
       if (category) params.category = category
       if (upcoming) params.upcoming = true
       const res = await eventsAPI.list(params)
-      setEvents(res.data)
+      setEvents(Array.isArray(res.data) ? res.data : [])
     } catch {
       setEvents([])
     } finally {
