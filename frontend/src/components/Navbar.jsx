@@ -57,9 +57,9 @@ export default function Navbar() {
             <button className="nav-pill pill-yellow" onClick={() => scrollToSection('team')}>
               Team
             </button>
-            <Link to="/about" className="nav-pill pill-green" onClick={close}>
+            <button className="nav-pill pill-green" onClick={() => scrollToSection('team')}>
               About
-            </Link>
+            </button>
             <button className="nav-pill pill-cyan" onClick={() => scrollToSection('faqs')}>
               FAQs
             </button>
